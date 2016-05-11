@@ -1,4 +1,4 @@
-libfreenect
+libfreenect (customized for depth+rgb logging)
 ===========
 
 libfreenect is a userspace driver for the Microsoft Kinect.
