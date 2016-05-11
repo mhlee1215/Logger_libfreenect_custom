@@ -1,0 +1,10 @@
+/Users/mhlee/Downloads/libfreenect_custom/CMakeFiles/uninstall.dir
+/Users/mhlee/Downloads/libfreenect_custom/wrappers/opencv/CMakeFiles/freenect-cvdemo.dir
+/Users/mhlee/Downloads/libfreenect_custom/wrappers/opencv/CMakeFiles/freenect_cv.dir
+/Users/mhlee/Downloads/libfreenect_custom/wrappers/cpp/CMakeFiles/freenect-cpp_pcview.dir
+/Users/mhlee/Downloads/libfreenect_custom/wrappers/cpp/CMakeFiles/freenect-cppview.dir
+/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/CMakeFiles/freenect_sync.dir
+/Users/mhlee/Downloads/libfreenect_custom/examples/CMakeFiles/freenect-regview_cpp.dir
+/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/CMakeFiles/freenect_sync_static.dir
+/Users/mhlee/Downloads/libfreenect_custom/src/CMakeFiles/freenectstatic.dir
+/Users/mhlee/Downloads/libfreenect_custom/src/CMakeFiles/freenect.dir

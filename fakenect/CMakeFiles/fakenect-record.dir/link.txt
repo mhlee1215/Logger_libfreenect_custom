@@ -1,0 +1,1 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -Wall -O2  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/fakenect-record.dir/record.c.o  -o ../bin/fakenect-record  ../lib/libfreenect.0.5.3.dylib -lm /opt/local/lib/libusb-1.0.dylib 

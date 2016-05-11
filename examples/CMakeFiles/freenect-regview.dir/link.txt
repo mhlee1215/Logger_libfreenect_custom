@@ -1,0 +1,1 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -Wall -O2  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/freenect-regview.dir/regview.c.o  -o ../bin/freenect-regview  

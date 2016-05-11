@@ -1,0 +1,1 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -Wall -O2  -dynamiclib -Wl,-headerpad_max_install_names -compatibility_version 0.5.0 -current_version 0.5.3 -o ../lib/fakenect/libfreenect.0.5.3.dylib -install_name /Users/mhlee/Downloads/libfreenect_custom/lib/fakenect/libfreenect.0.5.dylib CMakeFiles/fakenect.dir/fakenect.c.o -lm 

@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/mhlee/Downloads/libfreenect_custom/fakenect/fakenect.c
+libfreenect.h
+/Users/mhlee/Downloads/libfreenect_custom/fakenect/libfreenect.h
+platform.h
+/Users/mhlee/Downloads/libfreenect_custom/fakenect/platform.h
+stdio.h
+-
+string.h
+-
+stdlib.h
+-
+math.h
+-
+unistd.h
+-
+assert.h
+-
+
+/Users/mhlee/Downloads/libfreenect_custom/fakenect/platform.h
+math.h
+-
+direct.h
+-
+windows.h
+-
+time.h
+-
+unistd.h
+-
+
+include/libfreenect.h
+stdint.h
+-
+winsock.h
+-
+sys/time.h
+-
+
