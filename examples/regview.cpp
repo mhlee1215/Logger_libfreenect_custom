@@ -37,7 +37,8 @@
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
 #else
-#include <GL/glut.h>
+//#include <GL/glut.h>
+#include <GL/freeglut.h>
 #endif
 
 #include <zlib.h>
@@ -137,48 +138,35 @@ void idle()
 	glutPostRedisplay();
 }
 
-void printtext(int x, int y, string String)
-{
-//(x,y) is from the bottom left of the window
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0, init_width, 0, init_height, -1.0f, 1.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glPushAttrib(GL_DEPTH_TEST);
-    glDisable(GL_DEPTH_TEST);
-    glRasterPos2i(x,y);
-    for (int i=0; i<String.size(); i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, String[i]);
-    }
-    glPopAttrib();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-}
 
-void DrawText(const char *string)
+
+void DrawText(const char *string, int x, int y, float r, float g, float b)
 {
-    glColor3d(1, 1, 1);
+
+	glBegin(GL_QUADS);
+		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		glVertex4f((float)x-10, (float)y-25, 0.0f, 1.0f);
+		glVertex4f(200.0f, (float)y-25, 0.0f, 1.0f);
+		glVertex4f(200.0f, (float)y+25, 0.0f, 1.0f);
+		glVertex4f((float)x-10, (float)y+25, 0.0f, 1.0f);
+	glEnd();
+
+    glColor3d(r, g, b);
 
     void *font = GLUT_BITMAP_TIMES_ROMAN_24;
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glEnable(GL_BLEND);
 
-    // int len, i;
-    // glRasterPos2d(200, 200);
-    // len = (int)strlen(string);
-    // for (i = 0; i < len; i++)
-    // {
-    //     glutBitmapCharacter(font, string[i]);
-    // }
+    int len, i;
+    glRasterPos2d(x, y);
+    len = (int)strlen(string);
+    for (i = 0; i < len; i++)
+    {
+        glutBitmapCharacter(font, string[i]);
+    }
 
-    // glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
 }
 
 
@@ -277,6 +265,7 @@ void DrawGLScene() {
 
 	//Record.
 	if(isRecording){
+		
 		if(!recordStarted){
 			//Open file and write headers
 
@@ -354,8 +343,10 @@ void DrawGLScene() {
 	
 	pthread_mutex_unlock(&gl_backbuf_mutex);
 
+
+
 	glBindTexture(GL_TEXTURE_2D, gl_rgb_tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, 640, 480, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_front);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, init_width/2, init_height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_front);
 
 	glBegin(GL_TRIANGLE_FAN);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -376,7 +367,13 @@ void DrawGLScene() {
 	glEnd();
 
 	glBindTexture(GL_TEXTURE_2D, gl_depth_tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, 4, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, depth_front);
+	glTexImage2D(GL_TEXTURE_2D, 0, 4, init_width/2, init_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, depth_front);
+
+// glRasterPos2i(100, 120);
+// glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+// //char* mm = "text to render";
+// std::string message="Welcome";
+// glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)message.c_str());
 
 	glBegin(GL_TRIANGLE_FAN);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -393,31 +390,49 @@ void DrawGLScene() {
 		glTexCoord2f(0, 1); glVertex3f(0,init_height,0);	
 	}
 	
+
+
 	glEnd();
 
+	//glWindowPos2i( 100, 100 );  // move in 10 pixels from the left and bottom edges
+
+	// glEnable(GL_BLEND);
+	// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	// glBegin(GL_TRIANGLES);
+	// 	glColor4f(0.5f, 0.5f, 1.0f, 0.5f);
+	// 	glVertex4f(0.0f, 12.0f, 0.0f, 1.0f);
+	// 	glVertex4f(-12.0f, -10.0f, 0.0f, 1.0f);
+	// 	glVertex4f(12.0f, -10.0f, 0.0f, 1.0f);
+	// glEnd();
+
+
+
+	frame++;
+	//if (frame % 30 == 0) {
+		int ms = glutGet(GLUT_ELAPSED_TIME);
+		fps = 1.0/((ms - my_ftime)/1000.0);
+		my_ftime = ms;
+	//}
 	
+	//printf("%f\n", fps);
 	
-	char sss[64];
-    sprintf(sss, "somethingsomethingsomethingsomethingsomething");
-    //glBegin(GL_TEXTURE_2D);
-    //printtext(300,300,"something..");
-    DrawText("hhhhhhhhhhhhhhhh");
-    //glEnd();
+		
+	if(isRecording){
+		char message[100];
+		sprintf(message, "Recording %.1f", fps);
+		DrawText(message, 50, 50, 1.0f, 0.0f, 0.0f);
+	}else{
+		char message[100];
+		sprintf(message, "View %.1f", fps);
+		DrawText(message, 50, 50, 0.0f, 1.0f, 0.0f);
+	}
+    
+    
 
 	glutSwapBuffers();
 
 	
 
-	frame++;
-	if (frame % 30 == 0) {
-		int ms = glutGet(GLUT_ELAPSED_TIME);
-		fps = 30.0/((ms - my_ftime)/1000.0);
-		my_ftime = ms;
-	}
-	
-	//printf("%f\n", fps);
-	
-	
 	// glRasterPos2i(100, 120);
 // 	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
 // 	glutBitmapString(GLUT_BITMAP_HELVETICA_18, "text to render");
@@ -455,16 +470,16 @@ void onMoustButton(int button, int state, int x, int y){
 	
 	
 	if(GLUT_DOWN == state && b == MB_LEFT) {       
-        printf("hello clicked\n");
+       // printf("hello clicked\n");
         if(isRecording){
-			printf("Record end!\n");
+			//printf("Record end!\n");
 			isRecording = false;
 		}
 		else{
-			printf("Record start!\n");
+			//printf("Record start!\n");
 
 			logFolder = "./capture";
-
+			boost::filesystem::create_directory(logFolder);
 			recordedFrameNum = 0;
 			isRecording = true;
 		}
