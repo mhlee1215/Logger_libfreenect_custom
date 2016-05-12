@@ -41,7 +41,7 @@ if (Threads_FOUND AND OPENGL_FOUND AND GLUT_FOUND)
 
   #add_executable(freenect-glview glview.c)
   #add_executable(freenect-regview regview.cpp)
-  add_executable(freenect-regview_cpp regview.cpp)
+  add_executable(Logger regview.cpp)
  # add_executable(freenect-hiview hiview.c)
  # add_executable(freenect-chunkview chunkview.c)
  # add_executable(freenect-micview micview.c)
@@ -51,7 +51,7 @@ if (Threads_FOUND AND OPENGL_FOUND AND GLUT_FOUND)
   
   MESSAGE(a ${BOOST_LIBRARYDIR})
   
-  target_link_libraries(freenect-regview_cpp freenect 
+  target_link_libraries(Logger freenect 
   		${OPENGL_LIBRARIES} 
   		${GLUT_LIBRARY} 
   		${CMAKE_THREAD_LIBS_INIT} 
@@ -67,7 +67,7 @@ if (Threads_FOUND AND OPENGL_FOUND AND GLUT_FOUND)
  # target_link_libraries(freenect-chunkview freenect ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
  # target_link_libraries(freenect-micview freenect ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
 
-  install(TARGETS freenect-regview_cpp DESTINATION bin)
+ install(TARGETS Logger DESTINATION bin)
   #install(TARGETS freenect-glview freenect-regview freenect-hiview freenect-chunkview freenect-micview
   #        DESTINATION bin)
         
