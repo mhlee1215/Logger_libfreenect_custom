@@ -15,7 +15,8 @@ set(THREADS_USE_PTHREADS_WIN32 true)
 find_package(Threads)
 find_package(OpenGL)
 find_package(GLUT)
-
+find_package(OpenCV REQUIRED)
+find_package(ZLIB REQUIRED)
 
 #boost
 find_package(Boost REQUIRED)
@@ -26,11 +27,13 @@ set(Boost_USE_STATIC_RUNTIME    OFF)
 find_package(Boost COMPONENTS date_time)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${BOOST_LIBRARYDIR})
+INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
 
 find_package(Boost COMPONENTS filesystem)
 set(Boost_filesystem_lib ${Boost_LIBRARIES})
 find_package(Boost COMPONENTS system)
 set(Boost_system_lib ${Boost_LIBRARIES})
+find_package(Boost COMPONENTS thread REQUIRED)
 
 
 if (Threads_FOUND AND OPENGL_FOUND AND GLUT_FOUND)
@@ -56,6 +59,9 @@ if (Threads_FOUND AND OPENGL_FOUND AND GLUT_FOUND)
   		${BOOST_LIBRARYDIR}
 		${Boost_filesystem_lib}
 		${Boost_system_lib}
+		${Boost_THREAD_LIBRARY}
+		${OpenCV_LIBS}
+		${ZLIB_LIBRARY}
   	)
  # target_link_libraries(freenect-hiview freenect ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
  # target_link_libraries(freenect-chunkview freenect ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
@@ -67,26 +73,3 @@ if (Threads_FOUND AND OPENGL_FOUND AND GLUT_FOUND)
         
 endif ()
 
-# A few examples use c_sync.
-#[[if (BUILD_C_SYNC)
-  find_package(Threads REQUIRED)
-  include_directories(../wrappers/c_sync/)
-  include_directories(${THREADS_PTHREADS_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
-
-  add_executable(freenect-regtest regtest.c)
-  add_executable(freenect-tiltdemo tiltdemo.c)
-
-  target_link_libraries(freenect-regtest freenect_sync ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
-  target_link_libraries(freenect-tiltdemo freenect_sync ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
-
-  install(TARGETS freenect-regtest freenect-tiltdemo
-          DESTINATION bin)
-
-  if (OPENGL_FOUND AND GLUT_FOUND)
-    add_executable(freenect-glpclview glpclview.c)
-    target_link_libraries(freenect-glpclview freenect_sync ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
-    install(TARGETS freenect-glpclview
-            DESTINATION bin)
-  endif ()
-endif ()
-]]

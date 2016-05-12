@@ -40,8 +40,10 @@
 #include <GL/glut.h>
 #endif
 
-
- #include <boost/date_time.hpp>
+#include <zlib.h>
+#include <boost/format.hpp>
+#include <boost/thread.hpp>
+#include <boost/date_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 using namespace boost::posix_time; 
 #include <boost/lexical_cast.hpp>
@@ -54,6 +56,8 @@ using namespace boost::filesystem;
 #include <iostream>
 
 using namespace std;
+
+#include <opencv2/opencv.hpp>
 
 //#include <ft2build.h>
 //#include FT_FREETYPE_H
@@ -80,6 +84,10 @@ pthread_mutex_t gl_backbuf_mutex = PTHREAD_MUTEX_INITIALIZER;
 uint8_t *depth_mid, *depth_front;
 uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
+
+uint16_t *depth_raw;
+uint8_t *depth_raw_compressed;
+
 GLuint gl_depth_tex;
 GLuint gl_rgb_tex;
 
@@ -102,6 +110,14 @@ bool recordStarted;
 bool isRecording;
 FILE * logFile;
 string logFolder;
+
+int init_width = 1280;
+int init_height = 480;
+
+//For encoding
+CvMat * encodedImage;
+
+bool isUpsideDown = true;
 
 void idle()
 {
@@ -127,7 +143,7 @@ void printtext(int x, int y, string String)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, 1280, 0, 480, -1.0f, 1.0f);
+    glOrtho(0, init_width, 0, init_height, -1.0f, 1.0f);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -143,6 +159,26 @@ void printtext(int x, int y, string String)
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
+}
+
+void DrawText(const char *string)
+{
+    glColor3d(1, 1, 1);
+
+    void *font = GLUT_BITMAP_TIMES_ROMAN_24;
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glEnable(GL_BLEND);
+
+    // int len, i;
+    // glRasterPos2d(200, 200);
+    // len = (int)strlen(string);
+    // for (i = 0; i < len; i++)
+    // {
+    //     glutBitmapCharacter(font, string[i]);
+    // }
+
+    // glDisable(GL_BLEND);
 }
 
 
@@ -192,7 +228,27 @@ string getNextFilename()
 
     return "";
 }
- 
+
+
+void encodeJpeg(cv::Vec<unsigned char, 3> * rgb_data)
+{
+    cv::Mat3b rgb(480, 640, rgb_data, 1920);
+
+    IplImage * img = new IplImage(rgb);
+
+    int jpeg_params[] = {CV_IMWRITE_JPEG_QUALITY, 90, 0};
+
+    if(encodedImage != 0)
+    {
+        cvReleaseMat(&encodedImage);
+    }
+   
+    encodedImage = cvEncodeImage(".jpg", img, jpeg_params);
+    //CvMat stub;
+    //encodedImage = cvGetMat(img, &stub, 0, 0);
+
+    delete img;
+} 
 
 void DrawGLScene() {
 
@@ -215,6 +271,10 @@ void DrawGLScene() {
 		got_rgb = 0;
 	}
 	
+
+	// for(int i = 0 ; i < 10 ; i++)
+	// 	printf("%d\n", depth_raw[i]);
+
 	//Record.
 	if(isRecording){
 		if(!recordStarted){
@@ -234,8 +294,31 @@ void DrawGLScene() {
 
 
 
-		int32_t depthSize = 640*480*2;//compressed_size;
-        int32_t imageSize = 640*480*3;//encodedImage->width;
+
+ 		unsigned long compressed_size = 640*480*2;
+
+		boost::thread_group threads;
+		        threads.add_thread(new boost::thread(compress2,
+		                                             depth_raw_compressed,
+		                                             &compressed_size,
+		                                             (const Bytef*)depth_raw,
+		                                             640 * 480 * sizeof(short),
+		                                             Z_BEST_SPEED));
+
+		        threads.add_thread(new boost::thread(boost::bind(&encodeJpeg,
+		                                                         //this,
+		                                                         (cv::Vec<unsigned char, 3> *)rgb_front)));
+
+		         threads.join_all();
+
+
+
+
+
+
+
+		int32_t depthSize = compressed_size;//compressed_size;
+        int32_t imageSize = encodedImage->width;
 
         /**
          * Format is:
@@ -250,8 +333,8 @@ void DrawGLScene() {
         fwrite(&depthSize, sizeof(int32_t), 1, logFile);
         fwrite(&imageSize, sizeof(int32_t), 1, logFile);
         //fwrite(frameBuffersRaw[bufferIndex].first.first, depthSize, 1, logFile);
-        fwrite(depth_front, depthSize, 1, logFile);
-        fwrite(rgb_front, imageSize, 1, logFile);
+        fwrite(depth_raw_compressed, depthSize, 1, logFile);
+        fwrite(encodedImage->data.ptr, imageSize, 1, logFile);
 
        
 		recordedFrameNum++;
@@ -276,10 +359,20 @@ void DrawGLScene() {
 
 	glBegin(GL_TRIANGLE_FAN);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glTexCoord2f(0, 0); glVertex3f(640,0,0);
-	glTexCoord2f(1, 0); glVertex3f(1280,0,0);
-	glTexCoord2f(1, 1); glVertex3f(1280,480,0);
-	glTexCoord2f(0, 1); glVertex3f(640,480,0);
+
+	if(isUpsideDown){
+		glTexCoord2f(0, 0); glVertex3f(init_width,init_height,0);
+		glTexCoord2f(1, 0); glVertex3f(init_width/2,init_height,0);
+		glTexCoord2f(1, 1); glVertex3f(init_width/2,0,0);
+		glTexCoord2f(0, 1); glVertex3f(init_width,0,0);
+	}else{
+		glTexCoord2f(0, 0); glVertex3f(init_width/2,0,0);
+		glTexCoord2f(1, 0); glVertex3f(init_width,0,0);
+		glTexCoord2f(1, 1); glVertex3f(init_width,init_height,0);
+		glTexCoord2f(0, 1); glVertex3f(init_width/2,init_height,0);
+	}
+	
+
 	glEnd();
 
 	glBindTexture(GL_TEXTURE_2D, gl_depth_tex);
@@ -287,19 +380,33 @@ void DrawGLScene() {
 
 	glBegin(GL_TRIANGLE_FAN);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glTexCoord2f(0, 0); glVertex3f(0,0,0);
-	glTexCoord2f(1, 0); glVertex3f(640,0,0);
-	glTexCoord2f(1, 1); glVertex3f(640,480,0);
-	glTexCoord2f(0, 1); glVertex3f(0,480,0);
+
+	if(isUpsideDown){
+		glTexCoord2f(0, 0); glVertex3f(init_width/2,init_height,0);
+		glTexCoord2f(1, 0); glVertex3f(0,init_height,0);
+		glTexCoord2f(1, 1); glVertex3f(0,0,0);
+		glTexCoord2f(0, 1); glVertex3f(init_width/2,0,0);	
+	}else{
+		glTexCoord2f(0, 0); glVertex3f(0,0,0);
+		glTexCoord2f(1, 0); glVertex3f(init_width/2,0,0);
+		glTexCoord2f(1, 1); glVertex3f(init_width/2,init_height,0);
+		glTexCoord2f(0, 1); glVertex3f(0,init_height,0);	
+	}
+	
 	glEnd();
 
-char string[64];
-    sprintf(string, "something");
-    printtext(100,100,string);
-
 	
+	
+	char sss[64];
+    sprintf(sss, "somethingsomethingsomethingsomethingsomething");
+    //glBegin(GL_TEXTURE_2D);
+    //printtext(300,300,"something..");
+    DrawText("hhhhhhhhhhhhhhhh");
+    //glEnd();
 
 	glutSwapBuffers();
+
+	
 
 	frame++;
 	if (frame % 30 == 0) {
@@ -308,7 +415,7 @@ char string[64];
 		my_ftime = ms;
 	}
 	
-	printf("%f\n", fps);
+	//printf("%f\n", fps);
 	
 	
 	// glRasterPos2i(100, 120);
@@ -330,15 +437,20 @@ void keyPressed(unsigned char key, int x, int y)
 		free(rgb_front);
 		// Not pthread_exit because OSX leaves a thread lying around and doesn't exit
 		exit(0);
+	}else if(key == 'u'){
+		isUpsideDown = !isUpsideDown;
 	}
 }
 
 void onMoustButton(int button, int state, int x, int y){
 	int b;
+
 	switch(button){
 		case GLUT_LEFT_BUTTON:	b=MB_LEFT; break;
 		case GLUT_MIDDLE_BUTTON:	b=MB_MIDDLE; break;
 		case GLUT_RIGHT_BUTTON:	b=MB_RIGHT; break;
+		default: b=MB_LEFT;
+
 	}
 	
 	
@@ -369,7 +481,7 @@ void ReSizeGLScene(int Width, int Height)
 	glViewport(0,0,Width,Height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho (0, 1280, 480, 0, -1.0f, 1.0f);
+	glOrtho (0, init_width, init_height, 0, -1.0f, 1.0f);
 	glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -402,14 +514,14 @@ void InitGL(int Width, int Height)
 
 void *gl_threadfunc(void *arg)
 {
-	printf("GL thread\n");
+	//printf("GL thread\n");
 	glutInit(&g_argc, g_argv);
 
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
-	glutInitWindowSize(1280, 480);
+	glutInitWindowSize(init_width, init_height);
 	glutInitWindowPosition(0, 0);
 
-	window = glutCreateWindow("libfreenect Registration viewer 2");
+	window = glutCreateWindow("Logger libfreenect");
 
 	glutDisplayFunc(&DrawGLScene);
 	glutIdleFunc(&idle);
@@ -417,7 +529,7 @@ void *gl_threadfunc(void *arg)
 	glutKeyboardFunc(&keyPressed);
 	glutMouseFunc(&onMoustButton);
 
-	InitGL(1280, 480);
+	InitGL(init_width, init_height);
 
 	glutMainLoop();
 
@@ -437,6 +549,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 		int pval = t_gamma[depth[i]] / 4;
 		int lb = pval & 0xff;
 		depth_mid[4*i+3] = 128; // default alpha value
+		depth_raw[i] = depth[i];
 		if (depth[i] ==  0) depth_mid[4*i+3] = 0; // remove anything without depth value
 		switch (pval>>8) {
 			case 0:
@@ -535,9 +648,16 @@ int main(int argc, char **argv)
 
 	depth_mid = (uint8_t*)malloc(640*480*4);
 	depth_front = (uint8_t*)malloc(640*480*4);
+	depth_raw = (uint16_t*)malloc(640*480*4);
+	//depth_raw_compressed = (uint16_t*)malloc(640*480*4);
+
+	int depth_compress_buf_size = 640 * 480 * sizeof(int16_t) * 4;
+    depth_raw_compressed = (uint8_t*)malloc(depth_compress_buf_size);
+
 	rgb_back = (uint8_t*)malloc(640*480*3);
 	rgb_mid = (uint8_t*)malloc(640*480*3);
 	rgb_front = (uint8_t*)malloc(640*480*3);
+	
 
 	printf("Kinect camera test\n");
 
