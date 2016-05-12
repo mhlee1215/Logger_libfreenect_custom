@@ -119,6 +119,7 @@ int init_height = 480;
 CvMat * encodedImage;
 
 bool isUpsideDown = true;
+char *outPath;
 
 void idle()
 {
@@ -478,7 +479,8 @@ void onMoustButton(int button, int state, int x, int y){
 		else{
 			//printf("Record start!\n");
 
-			logFolder = "./capture";
+			logFolder = outPath;//+"/capture";
+			logFolder.append("/capture");
 			boost::filesystem::create_directory(logFolder);
 			recordedFrameNum = 0;
 			isRecording = true;
@@ -673,6 +675,8 @@ int main(int argc, char **argv)
 	rgb_mid = (uint8_t*)malloc(640*480*3);
 	rgb_front = (uint8_t*)malloc(640*480*3);
 	
+	outPath = (char*)malloc(255);
+	sprintf(outPath, ".");
 
 	printf("Kinect camera test\n");
 
@@ -698,8 +702,12 @@ int main(int argc, char **argv)
 	printf ("Number of devices found: %d\n", nr_devices);
 
 	int user_device_number = 0;
-	if (argc > 1)
-		user_device_number = atoi(argv[1]);
+
+	if (argc > 1){
+		//outPath = argv[1];
+		sprintf(outPath, "%s", argv[1]);
+		//user_device_number = atoi(argv[1]);
+	}
 
 	if (nr_devices < 1) {
 		freenect_shutdown(f_ctx);
