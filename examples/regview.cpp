@@ -49,6 +49,7 @@
 using namespace boost::posix_time; 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <opencv2/opencv.hpp>
 using namespace boost::filesystem;
 
 
@@ -58,7 +59,6 @@ using namespace boost::filesystem;
 
 using namespace std;
 
-#include <opencv2/opencv.hpp>
 
 //#include <ft2build.h>
 //#include FT_FREETYPE_H
