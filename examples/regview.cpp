@@ -487,7 +487,6 @@ void onMoustButton(int button, int state, int x, int y){
 		}
     }
     
-    
 	
 	//if(mouse_status & MB_PRESSED(b)
 	
