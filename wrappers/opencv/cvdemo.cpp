@@ -1,9 +1,40 @@
+
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#include <zlib.h>
+#include <boost/format.hpp>
+#include <boost/thread.hpp>
+#include <boost/date_time.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
+using namespace boost::posix_time; 
+#include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
+// #include <opencv2/opencv.hpp>
+// //#include <opencv/cv.h>
+// //#include <opencv/highgui.h>
+using namespace boost::filesystem;
+
 #include <stdio.h>
 #include <iostream>
+#include <csignal>
 #include <ctime>
 #include "libfreenect_cv.h"
+
+using namespace std;
+
+
+FILE * logFile;
+string logFolder;
+bool isRecording;
+int recordedFrameNum;
+char *outPath;
+
+//For encoding
+CvMat * encodedImage;
+
+uint16_t *depth_raw;
+uint8_t *depth_raw_compressed;
+
 
 IplImage *GlViewColor(IplImage *depth)
 {
@@ -55,21 +86,213 @@ IplImage *GlViewColor(IplImage *depth)
 	return image;
 }
 
+void encodeJpeg(IplImage * img)
+{
+    //cv::Mat3b rgb(480, 640, rgb_data, 1920);
+
+    //IplImage * img = new IplImage(rgb);
+
+    int jpeg_params[] = {CV_IMWRITE_JPEG_QUALITY, 90, 0};
+
+    if(encodedImage != 0)
+    {
+        cvReleaseMat(&encodedImage);
+    }
+   
+    encodedImage = cvEncodeImage(".jpg", img, jpeg_params);
+    //CvMat stub;
+    //encodedImage = cvGetMat(img, &stub, 0, 0);
+
+    //delete img;
+} 
+
+void saveSnapShot(IplImage * img)
+{
+    //cv::Mat3b rgb(480, 640, rgb_data, 1920);
+
+    //IplImage * img = new IplImage(rgb);
+
+    //int jpeg_params[] = {CV_IMWRITE_JPEG_QUALITY, 90, 0};
+
+    // if(encodedImage != 0)
+    // {
+    //     cvReleaseMat(&encodedImage);
+    // }
+   
+    //encodedImage = cvEncodeImage(".jpg", img, jpeg_params);
+    //CvMat stub;
+    //encodedImage = cvGetMat(img, &stub, 0, 0);
+
+    //delete img;
+
+
+		std::stringstream strs;
+        strs << logFolder;
+// #ifdef unix
+        strs << "/";
+// #else
+//         strs << "\\";
+// #endif
+        strs << "rgb.jpg";
+        //strs << ".png";
+
+        //cv::imwrite(strs.str().c_str(), img);
+
+		cvCvtColor(img,img,CV_BGR2RGB);
+        cvSaveImage(strs.str().c_str(), img);
+        //cv::imwrite(strs.str().c_str(), encodedImage);
+
+   // delete img;
+
+} 
+
+void saveDepthSnapShot(IplImage * img)
+{
+    //cv::Mat4b rgb(480, 640, rgb_data, 2560);
+
+    //IplImage * img = new IplImage(rgb);
+
+    //int jpeg_params[] = {CV_IMWRITE_JPEG_QUALITY, 90, 0};
+
+    // if(encodedImage != 0)
+    // {
+    //     cvReleaseMat(&encodedImage);
+    // }
+   
+   // encodedImage = cvEncodeImage(".jpg", img, jpeg_params);
+    //CvMat stub;
+    //encodedImage = cvGetMat(img, &stub, 0, 0);
+
+    //delete img;
+
+
+		std::stringstream strs;
+        strs << logFolder;
+// #ifdef unix
+        strs << "/";
+// #else
+//         strs << "\\";
+// #endif
+        strs << "depth.jpg";
+        //strs << ".png";
+
+        //cv::imwrite(strs.str().c_str(), img);
+
+		//cvCvtColor(img,img,CV_BGR2RGB);
+        cvSaveImage(strs.str().c_str(), img);
+        //cv::imwrite(strs.str().c_str(), encodedImage);
+
+   // delete img;
+
+} 
+
+string getNextFilename()
+{
+    static char const* const fmt = "%Y-%m-%d";
+    std::ostringstream ss;
+
+    ss.imbue(std::locale(std::cout.getloc(), new boost::gregorian::date_facet(fmt)));
+    ss << boost::gregorian::day_clock::universal_day();
+
+    std::string dateFilename;
+
+    // if(!lastFilename.length())
+//     {
+       dateFilename = ss.str();
+    // }
+//     else
+//     {
+//         dateFilename = lastFilename;
+//     }
+
+    std::string currentFile;
+
+    int currentNum = 0;
+
+    while(true)
+    {
+        std::stringstream strs;
+        strs << logFolder;
+// #ifdef unix
+        strs << "/";
+// #else
+//         strs << "\\";
+// #endif
+        strs << dateFilename << ".";
+        strs << std::setfill('0') << std::setw(2) << currentNum;
+        strs << ".klg";
+
+        if(!boost::filesystem::exists(strs.str().c_str()))
+        {
+            return strs.str();
+        }
+
+        currentNum++;
+    }
+
+    return "";
+}
+
+void signalHandler( int signum )
+{
+	fseek(logFile, 0, SEEK_SET);
+    fwrite(&recordedFrameNum, sizeof(int32_t), 1, logFile);
+
+    fflush(logFile);
+    fclose(logFile);
+
+    std::cout << "Writing " << recordedFrameNum << " frames finished.\n";
+
+    // cleanup and close up stuff here  
+    // terminate program  
+
+   exit(signum);  
+
+}
+
 int main(int argc, char **argv)
 {
+	char* homePath = NULL;
+	if( argc > 1){
+		homePath = argv[1];
+	}else{
+		homePath = (char*)malloc(10);
+		sprintf(homePath, ".");
+	}
+	std::signal(SIGINT, signalHandler);  
+
 	int fcnt = 0;
 	clock_t begin_time = std::clock();
+
+	int depth_compress_buf_size = 640 * 480 * sizeof(int16_t) * 4;
+    depth_raw_compressed = (uint8_t*)malloc(depth_compress_buf_size);
+    isRecording = true;
+    recordedFrameNum = 0;
+    //isRecordStarted = false;
+
+    //depth_raw = (uint16_t*)malloc(640*480*4);
+    // int depth_compress_buf_size = 640 * 480 * sizeof(int16_t) * 4;
+    // depth_raw_compressed = (uint8_t*)malloc(depth_compress_buf_size);
+
+    if(isRecording){
+
+		outPath = (char*)malloc(255);
+		sprintf(outPath, homePath);
+		logFolder = outPath;//+"/capture";
+		logFolder.append("/capture");
+		boost::filesystem::create_directory(logFolder);
+
+
+		std::string filename = getNextFilename();//"myfile.klg";
+		std::cout << filename << std::endl;
+		logFile = fopen(filename.c_str(), "w+");
+
+	    int32_t numFrames = 0;
+	    fwrite(&numFrames, sizeof(int32_t), 1, logFile);	
+	}
 	
 	while (cvWaitKey(10) < 0) {
-		fcnt++;
-		if(fcnt == 30){
-			double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
-			//std::cout << elipse << std::endl;
-			std::cout << 1/(elipse/30) << std::endl;
-			begin_time = std::clock();
-			fcnt = 0;
 		
-		}
 		IplImage *image = freenect_sync_get_rgb_cv(0);
 		if (!image) {
 		    printf("Error: Kinect not connected?\n");
@@ -81,8 +304,87 @@ int main(int argc, char **argv)
 		    printf("Error: Kinect not connected?\n");
 		    return -1;
 		}
+
+
+		//depth_raw
+		// uchar** dd = NULL;
+		// cvGetRawData(depth, dd);
+
+		//depth_raw = (uint16_t*)(*dd);
+		
+		
+
 		//cvShowImage("RGB", image);
 		//cvShowImage("Depth", GlViewColor(depth));
+
+
+		fcnt++;
+		if(fcnt == 30){
+			double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
+			//std::cout << elipse << std::endl;
+			std::cout << 1/(elipse/30) << std::endl;
+			begin_time = std::clock();
+			fcnt = 0;
+
+
+			boost::thread_group threads;		        
+        	threads.add_thread(new boost::thread(boost::bind(&saveSnapShot,
+                                                         //this,
+                                                         (IplImage *)image)));
+        	threads.add_thread(new boost::thread(boost::bind(&saveDepthSnapShot,
+                                                         //this,
+                                                         (IplImage *)GlViewColor(depth))));
+        	threads.join_all();
+		}
+
+
+		if(isRecording){
+			unsigned long compressed_size = 640*480*2;
+
+			boost::thread_group threads;
+	        threads.add_thread(new boost::thread(compress2,
+	                                             depth_raw_compressed,
+	                                             &compressed_size,
+	                                             (const Bytef*)depth->imageData,
+	                                             640 * 480 * sizeof(short),
+	                                             Z_BEST_SPEED));
+
+	        threads.add_thread(new boost::thread(boost::bind(&encodeJpeg,
+	                                                         //this,
+	                                                         (IplImage *)image)));
+
+	        threads.join_all();
+
+
+
+
+
+
+
+			int32_t depthSize = compressed_size;//compressed_size;
+	        int32_t imageSize = encodedImage->width;
+
+	        /**
+	         * Format is:
+	         * int64_t: timestamp
+	         * int32_t: depthSize
+	         * int32_t: imageSize
+	         * depthSize * unsigned char: depth_compress_buf
+	         * imageSize * unsigned char: encodedImage->data.ptr
+	         */
+	        int timestamp = 1000;
+	        fwrite(&timestamp, sizeof(int64_t), 1, logFile);
+	        fwrite(&depthSize, sizeof(int32_t), 1, logFile);
+	        fwrite(&imageSize, sizeof(int32_t), 1, logFile);
+	        //fwrite(frameBuffersRaw[bufferIndex].first.first, depthSize, 1, logFile);
+	        fwrite(depth_raw_compressed, depthSize, 1, logFile);
+	        fwrite(encodedImage->data.ptr, imageSize, 1, logFile);
+
+	       
+			recordedFrameNum++;
+			//std::cout << recordedFrameNum << std::endl;
+		}
+
 	}
 	return 0;
 }
