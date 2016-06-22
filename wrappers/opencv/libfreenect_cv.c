@@ -8,7 +8,7 @@ IplImage *freenect_sync_get_depth_cv(int index)
 	static char *data = 0;
 	if (!image) image = cvCreateImageHeader(cvSize(640,480), 16, 1);
 	unsigned int timestamp;
-	if (freenect_sync_get_depth((void**)&data, &timestamp, index, FREENECT_DEPTH_11BIT))
+	if (freenect_sync_get_depth((void**)&data, &timestamp, index, FREENECT_DEPTH_REGISTERED))
 	    return NULL;
 	cvSetData(image, data, 640*2);
 	return image;
