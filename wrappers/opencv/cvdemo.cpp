@@ -138,7 +138,7 @@ void saveSnapShot(IplImage * img)
 
         //cv::imwrite(strs.str().c_str(), img);
 
-		cvCvtColor(img,img,CV_BGR2RGB);
+		//cvCvtColor(img,img,CV_BGR2RGB);
         cvSaveImage(strs.str().c_str(), img);
         //cv::imwrite(strs.str().c_str(), encodedImage);
 
