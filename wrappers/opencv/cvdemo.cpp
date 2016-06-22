@@ -259,6 +259,22 @@ int main(int argc, char **argv)
 		homePath = (char*)malloc(10);
 		sprintf(homePath, ".");
 	}
+
+	int cvtRGB2BGR = 1;
+	if( argc > 2){
+		cvtRGB2BGR = atoi(argv[2]);
+	}
+
+	int isUpsideDown = 0;
+	if( argc > 3){
+		isUpsideDown = atoi(argv[3]);
+	}
+
+	int isViewer = 0;
+	if( argc > 4){
+		isViewer = atoi(argv[4]);	
+	}
+
 	std::signal(SIGINT, signalHandler);  
 
 	int fcnt = 0;
@@ -298,13 +314,22 @@ int main(int argc, char **argv)
 		    printf("Error: Kinect not connected?\n");
 		    return -1;
 		}
-		cvCvtColor(image, image, CV_RGB2BGR);
+		
+		if(cvtRGB2BGR == 1)
+			cvCvtColor(image, image, CV_RGB2BGR);
+
+
 		IplImage *depth = freenect_sync_get_depth_cv(0);
 		if (!depth) {
 		    printf("Error: Kinect not connected?\n");
 		    return -1;
 		}
 
+		if(isUpsideDown == 1){
+			//do Upside Down
+			cvFlip(image, image, -1);
+			cvFlip(depth, depth, -1);
+		}
 
 		//depth_raw
 		// uchar** dd = NULL;
@@ -313,9 +338,11 @@ int main(int argc, char **argv)
 		//depth_raw = (uint16_t*)(*dd);
 		
 		
-
-		//cvShowImage("RGB", image);
-		//cvShowImage("Depth", GlViewColor(depth));
+		if(isViewer ==1){
+			cvShowImage("RGB", image);
+			cvShowImage("Depth", GlViewColor(depth));	
+		}
+		
 
 
 		fcnt++;
