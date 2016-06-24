@@ -26,6 +26,7 @@ using namespace std;
 FILE * logFile;
 string logFolder;
 bool isRecording;
+bool isFirstFrame;
 int recordedFrameNum;
 char *outPath;
 
@@ -275,6 +276,16 @@ int main(int argc, char **argv)
 		isViewer = atoi(argv[4]);	
 	}
 
+	//isRecording = true;
+	if( argc > 5){
+		if(atoi(argv[5]) == 1)
+			isRecording = true;
+		else
+			isRecording = false;
+	}
+
+	
+
 	std::signal(SIGINT, signalHandler);  
 
 	int fcnt = 0;
@@ -282,22 +293,24 @@ int main(int argc, char **argv)
 
 	int depth_compress_buf_size = 640 * 480 * sizeof(int16_t) * 4;
     depth_raw_compressed = (uint8_t*)malloc(depth_compress_buf_size);
-    isRecording = true;
+    
     recordedFrameNum = 0;
+    isFirstFrame = true;
     //isRecordStarted = false;
 
     //depth_raw = (uint16_t*)malloc(640*480*4);
     // int depth_compress_buf_size = 640 * 480 * sizeof(int16_t) * 4;
     // depth_raw_compressed = (uint8_t*)malloc(depth_compress_buf_size);
 
+
+	std::cout << "Logging Started.." << std::endl;
+	outPath = (char*)malloc(255);
+	sprintf(outPath, homePath);
+	logFolder = outPath;//+"/capture";
+	logFolder.append("/capture");
+	boost::filesystem::create_directory(logFolder);
+
     if(isRecording){
-
-		outPath = (char*)malloc(255);
-		sprintf(outPath, homePath);
-		logFolder = outPath;//+"/capture";
-		logFolder.append("/capture");
-		boost::filesystem::create_directory(logFolder);
-
 
 		std::string filename = getNextFilename();//"myfile.klg";
 		std::cout << filename << std::endl;
@@ -305,6 +318,8 @@ int main(int argc, char **argv)
 
 	    int32_t numFrames = 0;
 	    fwrite(&numFrames, sizeof(int32_t), 1, logFile);	
+	}else{
+		std::cout << "Pre-running mode.." << std::endl;
 	}
 	
 	while (cvWaitKey(10) < 0) {
@@ -324,6 +339,12 @@ int main(int argc, char **argv)
 		    printf("Error: Kinect not connected?\n");
 		    return -1;
 		}
+
+		if(isFirstFrame){
+			std::cout << "RGB&DEPTH Retriving started.." << std::endl;		
+		}
+
+		isFirstFrame = false;
 
 		if(isUpsideDown == 1){
 			//do Upside Down
