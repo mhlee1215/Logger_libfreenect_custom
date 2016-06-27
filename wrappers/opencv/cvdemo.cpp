@@ -234,6 +234,21 @@ string getNextFilename()
     return "";
 }
 
+string getNextFilename(char* name){
+	if(name == NULL) return getNextFilename();
+
+	std::stringstream strs;
+    strs << logFolder;
+// #ifdef unix
+    strs << "/";
+// #else
+//         strs << "\\";
+// #endif
+    strs << name;
+    strs << ".klg";
+	return strs.str();
+}
+
 void signalHandler( int signum )
 {
 	fseek(logFile, 0, SEEK_SET);
@@ -253,6 +268,7 @@ void signalHandler( int signum )
 
 int main(int argc, char **argv)
 {
+	char* resultPath = NULL;
 	char* homePath = NULL;
 	if( argc > 1){
 		homePath = argv[1];
@@ -284,6 +300,10 @@ int main(int argc, char **argv)
 			isRecording = false;
 	}
 
+	if( argc > 6){
+		resultPath = argv[6];
+	}
+
 	
 
 	std::signal(SIGINT, signalHandler);  
@@ -312,7 +332,7 @@ int main(int argc, char **argv)
 
     if(isRecording){
 
-		std::string filename = getNextFilename();//"myfile.klg";
+		std::string filename = getNextFilename(resultPath);//"myfile.klg";
 		std::cout << filename << std::endl;
 		logFile = fopen(filename.c_str(), "w+");
 
