@@ -35,6 +35,7 @@ CvMat * encodedImage;
 
 uint16_t *depth_raw;
 uint8_t *depth_raw_compressed;
+std::string filename;
 
 
 IplImage *GlViewColor(IplImage *depth)
@@ -134,14 +135,27 @@ void saveSnapShot(IplImage * img)
 // #else
 //         strs << "\\";
 // #endif
-        strs << "rgb.jpg";
-        //strs << ".png";
+
+	    strs << "rgb.jpg";
+//strs << ".png";
 
         //cv::imwrite(strs.str().c_str(), img);
 
 		//cvCvtColor(img,img,CV_BGR2RGB);
         cvSaveImage(strs.str().c_str(), img);
         //cv::imwrite(strs.str().c_str(), encodedImage);
+
+        if(recordedFrameNum == 29){
+			std::stringstream strs;
+		    strs << logFolder;
+			// #ifdef unix
+			strs << "/";
+			// #else
+			//         strs << "\\";
+			// #endif
+			strs << filename.c_str();
+		    strs << "rgb.jpg";
+        }
 
    // delete img;
 
@@ -181,6 +195,8 @@ void saveDepthSnapShot(IplImage * img)
 
 		//cvCvtColor(img,img,CV_BGR2RGB);
         cvSaveImage(strs.str().c_str(), img);
+
+        
         //cv::imwrite(strs.str().c_str(), encodedImage);
 
    // delete img;
@@ -330,9 +346,10 @@ int main(int argc, char **argv)
 	logFolder.append("/capture");
 	boost::filesystem::create_directory(logFolder);
 
+	
     if(isRecording){
 
-		std::string filename = getNextFilename(resultPath);//"myfile.klg";
+		filename = getNextFilename(resultPath);//"myfile.klg";
 		std::cout << filename << std::endl;
 		logFile = fopen(filename.c_str(), "w+");
 
@@ -383,7 +400,8 @@ int main(int argc, char **argv)
 			cvShowImage("RGB", image);
 			cvShowImage("Depth", GlViewColor(depth));	
 		}
-		
+
+				
 
 
 		fcnt++;
@@ -398,7 +416,8 @@ int main(int argc, char **argv)
 			boost::thread_group threads;		        
         	threads.add_thread(new boost::thread(boost::bind(&saveSnapShot,
                                                          //this,
-                                                         (IplImage *)image)));
+                                                         (IplImage *)image)
+        												 ));
         	threads.add_thread(new boost::thread(boost::bind(&saveDepthSnapShot,
                                                          //this,
                                                          (IplImage *)GlViewColor(depth))));
@@ -451,6 +470,13 @@ int main(int argc, char **argv)
 	       
 			recordedFrameNum++;
 			//std::cout << recordedFrameNum << std::endl;
+
+			// boost::thread_group threads;		        
+   //      	threads.add_thread(new boost::thread(boost::bind(&saveSnapShot,
+   //                                                       //this,
+   //                                                       (IplImage *)image),
+   //      												 filename.c_str()));
+   //      	threads.join_all();
 		}
 
 	}
