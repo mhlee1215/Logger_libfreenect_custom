@@ -36,7 +36,7 @@ CvMat * encodedImage;
 uint16_t *depth_raw;
 uint8_t *depth_raw_compressed;
 std::string filename;
-
+int cvtRGB2BGR = 1;
 
 IplImage *GlViewColor(IplImage *depth)
 {
@@ -141,7 +141,9 @@ void saveSnapShot(IplImage * img)
 
         //cv::imwrite(strs.str().c_str(), img);
 
-		//cvCvtColor(img,img,CV_BGR2RGB);
+	    if(cvtRGB2BGR==1)
+			cvCvtColor(img,img,CV_BGR2RGB);
+
         cvSaveImage(strs.str().c_str(), img);
         //cv::imwrite(strs.str().c_str(), encodedImage);
 
@@ -293,7 +295,7 @@ int main(int argc, char **argv)
 		sprintf(homePath, ".");
 	}
 
-	int cvtRGB2BGR = 1;
+	//int cvtRGB2BGR = 1;
 	if( argc > 2){
 		cvtRGB2BGR = atoi(argv[2]);
 	}
