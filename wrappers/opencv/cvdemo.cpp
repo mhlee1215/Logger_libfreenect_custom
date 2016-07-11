@@ -37,6 +37,7 @@ uint16_t *depth_raw;
 uint8_t *depth_raw_compressed;
 std::string filename;
 int cvtRGB2BGR = 1;
+bool hasTakenSnapshot = false;
 
 IplImage *GlViewColor(IplImage *depth)
 {
@@ -147,16 +148,21 @@ void saveSnapShot(IplImage * img)
         cvSaveImage(strs.str().c_str(), img);
         //cv::imwrite(strs.str().c_str(), encodedImage);
 
-        if(recordedFrameNum == 29){
-			std::stringstream strs;
-		    strs << logFolder;
+        if(!hasTakenSnapshot && isRecording){
+			std::stringstream strs2;
+		    //strs2 << logFolder;
 			// #ifdef unix
-			strs << "/";
+			//strs2 << "/";
 			// #else
 			//         strs << "\\";
 			// #endif
-			strs << filename.c_str();
-		    strs << "rgb.jpg";
+			strs2 << filename.c_str();
+		    strs2 << ".rgb.jpg";
+
+		    std::cout << "TEST!" << strs2.str().c_str() << std::endl;
+		    cvSaveImage(strs2.str().c_str(), img);
+
+		    hasTakenSnapshot = true;
         }
 
    // delete img;
@@ -348,10 +354,10 @@ int main(int argc, char **argv)
 	logFolder.append("/capture");
 	boost::filesystem::create_directory(logFolder);
 
-	
-    if(isRecording){
 
-		filename = getNextFilename(resultPath);//"myfile.klg";
+	filename = getNextFilename(resultPath);//"myfile.klg";	
+
+    if(isRecording){	
 		std::cout << filename << std::endl;
 		logFile = fopen(filename.c_str(), "w+");
 
