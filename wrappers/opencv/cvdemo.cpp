@@ -26,6 +26,7 @@ using namespace std;
 FILE * logFile;
 string logFolder;
 bool isRecording;
+bool isMakeSnapshot;
 bool isFirstFrame;
 int recordedFrameNum;
 char *outPath;
@@ -325,7 +326,8 @@ int main(int argc, char **argv)
 	}
 
 	if( argc > 6){
-		resultPath = argv[6];
+		//resultPath = argv[6];
+
 	}
 
 	
@@ -413,12 +415,12 @@ int main(int argc, char **argv)
 
 
 		fcnt++;
-		if(fcnt == 30){
+		if(fcnt == 1){
 			double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
 			//std::cout << elipse << std::endl;
 			std::cout << 1/(elipse/30) << std::endl;
 			begin_time = std::clock();
-			fcnt = 0;
+			//fcnt = 0;
 
 
 			boost::thread_group threads;		        
