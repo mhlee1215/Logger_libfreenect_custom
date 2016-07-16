@@ -293,6 +293,7 @@ void signalHandler( int signum )
 
 int main(int argc, char **argv)
 {
+	bool isCompress = false;
 	char* resultPath = NULL;
 	char* homePath = NULL;
 	if( argc > 1){
@@ -326,8 +327,7 @@ int main(int argc, char **argv)
 	}
 
 	if( argc > 6){
-		//resultPath = argv[6];
-
+		resultPath = argv[6];
 	}
 
 	
@@ -441,21 +441,57 @@ int main(int argc, char **argv)
 
 
 		if(isRecording){
-			unsigned long compressed_size = 640*480*2;
+			if(isCompress){
+				unsigned long compressed_size = 640*480*2;
+				boost::thread_group threads;
+		        threads.add_thread(new boost::thread(compress2,
+		                                             depth_raw_compressed,
+		                                             &compressed_size,
+		                                             (const Bytef*)depth->imageData,
+		                                             640 * 480 * sizeof(short),
+		                                             Z_BEST_SPEED));
 
-			boost::thread_group threads;
-	        threads.add_thread(new boost::thread(compress2,
-	                                             depth_raw_compressed,
-	                                             &compressed_size,
-	                                             (const Bytef*)depth->imageData,
-	                                             640 * 480 * sizeof(short),
-	                                             Z_BEST_SPEED));
+		        threads.add_thread(new boost::thread(boost::bind(&encodeJpeg,
+		                                                         //this,
+		                                                         (IplImage *)image)));
 
-	        threads.add_thread(new boost::thread(boost::bind(&encodeJpeg,
-	                                                         //this,
-	                                                         (IplImage *)image)));
+		        threads.join_all();
 
-	        threads.join_all();
+				int32_t depthSize = compressed_size;//compressed_size;
+		        int32_t imageSize = encodedImage->width;
+
+		        /**
+		         * Format is:
+		         * int64_t: timestamp
+		         * int32_t: depthSize
+		         * int32_t: imageSize
+		         * depthSize * unsigned char: depth_compress_buf
+		         * imageSize * unsigned char: encodedImage->data.ptr
+		         */
+		        int timestamp = 1000;
+		        fwrite(&timestamp, sizeof(int64_t), 1, logFile);
+		        fwrite(&depthSize, sizeof(int32_t), 1, logFile);
+		        fwrite(&imageSize, sizeof(int32_t), 1, logFile);
+		        fwrite(depth_raw_compressed, depthSize, 1, logFile);
+		        fwrite(encodedImage->data.ptr, imageSize, 1, logFile);
+
+		       
+			}else{
+				unsigned long compressed_size = 640*480*2;
+
+				// boost::thread_group threads;
+		  //       threads.add_thread(new boost::thread(compress2,
+		  //                                            depth_raw_compressed,
+		  //                                            &compressed_size,
+		  //                                            (const Bytef*)depth->imageData,
+		  //                                            640 * 480 * sizeof(short),
+		  //                                            Z_BEST_SPEED));
+
+		  //       threads.add_thread(new boost::thread(boost::bind(&encodeJpeg,
+		  //                                                        //this,
+		  //                                                        (IplImage *)image)));
+
+		  //       threads.join_all();
 
 
 
@@ -463,27 +499,30 @@ int main(int argc, char **argv)
 
 
 
-			int32_t depthSize = compressed_size;//compressed_size;
-	        int32_t imageSize = encodedImage->width;
+				int32_t depthSize = compressed_size;//compressed_size;
+		        int32_t imageSize = 640*480*3;//encodedImage->width;
 
-	        /**
-	         * Format is:
-	         * int64_t: timestamp
-	         * int32_t: depthSize
-	         * int32_t: imageSize
-	         * depthSize * unsigned char: depth_compress_buf
-	         * imageSize * unsigned char: encodedImage->data.ptr
-	         */
-	        int timestamp = 1000;
-	        fwrite(&timestamp, sizeof(int64_t), 1, logFile);
-	        fwrite(&depthSize, sizeof(int32_t), 1, logFile);
-	        fwrite(&imageSize, sizeof(int32_t), 1, logFile);
-	        //fwrite(frameBuffersRaw[bufferIndex].first.first, depthSize, 1, logFile);
-	        fwrite(depth_raw_compressed, depthSize, 1, logFile);
-	        fwrite(encodedImage->data.ptr, imageSize, 1, logFile);
+		        /**
+		         * Format is:
+		         * int64_t: timestamp
+		         * int32_t: depthSize
+		         * int32_t: imageSize
+		         * depthSize * unsigned char: depth_compress_buf
+		         * imageSize * unsigned char: encodedImage->data.ptr
+		         */
+		        int timestamp = 1000;
+		        fwrite(&timestamp, sizeof(int64_t), 1, logFile);
+		        fwrite(&depthSize, sizeof(int32_t), 1, logFile);
+		        fwrite(&imageSize, sizeof(int32_t), 1, logFile);
+		        fwrite(depth->imageData, depthSize, 1, logFile);
+		        fwrite(image->imageData, imageSize, 1, logFile);
 
-	       
+		       
+			}
+			
 			recordedFrameNum++;
+
+
 			//std::cout << recordedFrameNum << std::endl;
 
 			// boost::thread_group threads;		        
