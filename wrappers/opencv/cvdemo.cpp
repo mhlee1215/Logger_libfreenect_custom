@@ -413,28 +413,31 @@ int main(int argc, char **argv)
 
 				
 
-		double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
-		//std::cout << elipse << std::endl;
-		std::cout << 1/(elipse/30) << std::endl;
-		begin_time = std::clock();
+		
 
 
-		fcnt++;
-		if(fcnt == 1){
-			
+		
+		if(fcnt % 30 == 0){
 			//fcnt = 0;
+			double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
+			//std::cout << elipse << std::endl;
+			std::cout << 1/(elipse/30) << std::endl;
+			begin_time = std::clock();
 
-
-			boost::thread_group threads;		        
-        	threads.add_thread(new boost::thread(boost::bind(&saveSnapShot,
-                                                         //this,
-                                                         (IplImage *)image)
-        												 ));
-        	threads.add_thread(new boost::thread(boost::bind(&saveDepthSnapShot,
-                                                         //this,
-                                                         (IplImage *)GlViewColor(depth))));
-        	threads.join_all();
+			if(recordedFrameNum == 0){
+				boost::thread_group threads;		        
+	        	threads.add_thread(new boost::thread(boost::bind(&saveSnapShot,
+	                                                         //this,
+	                                                         (IplImage *)image)
+	        												 ));
+	        	threads.add_thread(new boost::thread(boost::bind(&saveDepthSnapShot,
+	                                                         //this,
+	                                                         (IplImage *)GlViewColor(depth))));
+	        	threads.join_all();	
+			}
+			
 		}
+		fcnt++;
 
 
 		if(isRecording){
