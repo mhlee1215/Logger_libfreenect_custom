@@ -293,7 +293,7 @@ void signalHandler( int signum )
 
 int main(int argc, char **argv)
 {
-	bool isCompress = false;
+	bool isCompress = true;
 	char* resultPath = NULL;
 	char* homePath = NULL;
 	if( argc > 1){
