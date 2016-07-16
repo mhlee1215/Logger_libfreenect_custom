@@ -413,13 +413,15 @@ int main(int argc, char **argv)
 
 				
 
+		double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
+		//std::cout << elipse << std::endl;
+		std::cout << 1/(elipse/30) << std::endl;
+		begin_time = std::clock();
+
 
 		fcnt++;
 		if(fcnt == 1){
-			double elipse = ((double)( std::clock() - begin_time )) / CLOCKS_PER_SEC;
-			//std::cout << elipse << std::endl;
-			std::cout << 1/(elipse/30) << std::endl;
-			begin_time = std::clock();
+			
 			//fcnt = 0;
 
 
