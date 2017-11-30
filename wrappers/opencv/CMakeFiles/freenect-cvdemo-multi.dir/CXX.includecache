@@ -1,0 +1,44 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/opencv/cvdemo_multi.cpp
+opencv/cv.h
+-
+opencv/highgui.h
+-
+zlib.h
+-
+boost/format.hpp
+-
+boost/thread.hpp
+-
+boost/date_time.hpp
+-
+boost/date_time/gregorian/gregorian.hpp
+-
+boost/lexical_cast.hpp
+-
+boost/filesystem.hpp
+-
+stdio.h
+-
+iostream
+-
+csignal
+-
+ctime
+-
+pthread.h
+-
+libfreenect_cv.h
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/opencv/libfreenect_cv.h
+
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/opencv/libfreenect_cv.h
+opencv/cv.h
+-
+

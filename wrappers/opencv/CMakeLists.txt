@@ -50,5 +50,8 @@ install (FILES "libfreenect_cv.h"
 
 add_executable(freenect-cvdemo cvdemo.cpp)
 target_link_libraries(freenect-cvdemo freenect freenect_sync freenect_cv ${OpenCV_LIBS})
-install (TARGETS freenect-cvdemo
-  DESTINATION bin)
+install (TARGETS freenect-cvdemo DESTINATION bin)
+
+add_executable(freenect-cvdemo-multi cvdemo_multi.cpp)
+target_link_libraries(freenect-cvdemo-multi freenect freenect_sync freenect_cv ${OpenCV_LIBS})
+install (TARGETS freenect-cvdemo-multi DESTINATION bin)

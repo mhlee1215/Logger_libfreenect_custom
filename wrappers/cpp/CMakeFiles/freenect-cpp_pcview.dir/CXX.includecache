@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/Users/mhlee/Downloads/libfreenect_custom/wrappers/cpp/cpp_pc_view.cpp
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/cpp/cpp_pc_view.cpp
 iostream
 -
 vector
@@ -20,7 +20,7 @@ GLUT/glut.h
 GL/glut.h
 -
 
-/opt/local/include/libusb-1.0/libusb.h
+/usr/include/libusb-1.0/libusb.h
 stdint.h
 -
 sys/types.h

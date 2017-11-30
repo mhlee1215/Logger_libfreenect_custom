@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/libfreenect_sync.c
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/c_sync/libfreenect_sync.c
 stdio.h
 -
 pthread.h
@@ -18,13 +18,13 @@ stdlib.h
 assert.h
 -
 libfreenect_registration.h
-/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/libfreenect_registration.h
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/c_sync/libfreenect_registration.h
 libfreenect_sync.h
-/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/libfreenect_sync.h
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/c_sync/libfreenect_sync.h
 
-/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/libfreenect_sync.h
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/c_sync/libfreenect_sync.h
 libfreenect.h
-/Users/mhlee/Downloads/libfreenect_custom/wrappers/c_sync/libfreenect.h
+/home/mhlee/Downloads/Logger_libfreenect_custom/wrappers/c_sync/libfreenect.h
 stdint.h
 -
 
